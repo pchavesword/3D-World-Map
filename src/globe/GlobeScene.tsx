@@ -1,7 +1,7 @@
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { DEG } from './geo'
+import { DEG, latLonToVector3 } from './geo'
 import type { GlobeController } from './GlobeController'
 import { useGlobePointer } from './useGlobePointer'
 
@@ -90,10 +90,30 @@ function Atmosphere() {
   )
 }
 
-function Rig({ controller, children }: { controller: GlobeController; children: React.ReactNode }) {
+export type MarkerPoint = { id: string; lat: number; lon: number }
+export type MarkerElements = React.RefObject<Map<string, HTMLElement>>
+
+/** Markers float just above the land plateau. */
+const MARKER_RADIUS = 1.034
+const world = new THREE.Vector3()
+const toCam = new THREE.Vector3()
+const unit = new THREE.Vector3()
+
+type RigProps = {
+  controller: GlobeController
+  markers: MarkerPoint[]
+  markerEls: MarkerElements
+  children: React.ReactNode
+}
+
+function Rig({ controller, markers, markerEls, children }: RigProps) {
   const tilt = useRef<THREE.Group>(null!)
   const spin = useRef<THREE.Group>(null!)
   useGlobePointer(controller)
+  const points = useMemo(
+    () => markers.map((m) => ({ id: m.id, local: latLonToVector3(m.lat, m.lon, MARKER_RADIUS) })),
+    [markers],
+  )
 
   useFrame((state, delta) => {
     controller.update(Math.min(delta, 0.1))
@@ -104,6 +124,25 @@ function Rig({ controller, children }: { controller: GlobeController; children: 
     // Zoom scales the gap between camera and surface, so it never clips the relief.
     const fit = fitDistance(cam.aspect)
     cam.position.set(0, 0, 1 + (fit - 1) / zoom)
+
+    // Pin the DOM markers to their lat/long and fade them out toward the limb.
+    tilt.current.updateMatrixWorld(true)
+    cam.updateMatrixWorld()
+    const { width, height } = state.size
+    for (const p of points) {
+      const el = markerEls.current.get(p.id)
+      if (!el) continue
+      world.copy(p.local).applyMatrix4(spin.current.matrixWorld)
+      const facing = toCam.copy(cam.position).sub(world).normalize().dot(unit.copy(world).normalize())
+      const opacity = THREE.MathUtils.smoothstep(facing, 0.08, 0.3)
+      world.project(cam)
+      const x = (world.x * 0.5 + 0.5) * width
+      const y = (-world.y * 0.5 + 0.5) * height
+      el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`
+      el.style.opacity = opacity.toFixed(2)
+      const hidden = opacity < 0.5
+      if ((el.dataset.hidden === 'true') !== hidden) el.dataset.hidden = String(hidden)
+    }
   })
 
   return (
@@ -116,10 +155,11 @@ function Rig({ controller, children }: { controller: GlobeController; children: 
 type Props = {
   controller: GlobeController
   onReady: () => void
-  children?: React.ReactNode
+  markers: MarkerPoint[]
+  markerEls: MarkerElements
 }
 
-export default function GlobeScene({ controller, onReady, children }: Props) {
+export default function GlobeScene({ controller, onReady, markers, markerEls }: Props) {
   return (
     <Canvas
       flat
@@ -134,11 +174,10 @@ export default function GlobeScene({ controller, onReady, children }: Props) {
       <directionalLight position={[-3.2, 3.4, 4.2]} intensity={1.85} />
       <directionalLight position={[4, -1.5, 2]} intensity={0.25} color="#dde5ff" />
       <Atmosphere />
-      <Rig controller={controller}>
+      <Rig controller={controller} markers={markers} markerEls={markerEls}>
         <Suspense fallback={null}>
           <Earth onReady={onReady} />
         </Suspense>
-        {children}
       </Rig>
     </Canvas>
   )

@@ -88,7 +88,7 @@ export class GlobeController {
     this.touch()
   }
 
-  flyTo(target: Partial<GlobeView>, duration = 1.8) {
+  flyTo(target: Partial<GlobeView>, duration = 1.8, onArrive?: () => void) {
     this.killTween()
     this.velLon = 0
     this.velLat = 0
@@ -101,6 +101,7 @@ export class GlobeController {
     this.touch()
     if (prefersReducedMotion()) {
       Object.assign(this.view, to)
+      onArrive?.()
       return
     }
     this.tween = gsap.to(this.view, {
@@ -110,6 +111,7 @@ export class GlobeController {
       onUpdate: () => this.touch(),
       onComplete: () => {
         this.tween = null
+        onArrive?.()
       },
     })
   }

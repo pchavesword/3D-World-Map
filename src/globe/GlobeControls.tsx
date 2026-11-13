@@ -3,7 +3,7 @@ import './globe.css'
 
 export default function GlobeControls({ controller }: { controller: GlobeController }) {
   return (
-    <div className="globe-controls" role="group" aria-label="Globe controls">
+    <div className="globe-controls" data-keep-card role="group" aria-label="Globe controls">
       <div className="globe-controls__zoom">
         <button type="button" aria-label="Zoom in" onClick={() => controller.zoomBy(1.35)}>
           <svg viewBox="0 0 12 12" aria-hidden="true">
