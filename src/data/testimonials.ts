@@ -51,14 +51,7 @@ const ROLES = [
   'a graphic designer',
   'an accountant',
 ]
-const ISSUES = [
-  'lower back pain',
-  'a stiff shoulder',
-  'knee pain',
-  'neck tension',
-  'hip pain',
-  'wrist and elbow pain',
-]
+const ISSUES = ['lower back pain', 'a stiff shoulder', 'knee pain', 'neck tension', 'hip pain', 'wrist and elbow pain']
 
 type Seed = [name: string, city: string, country: string, lat: number, lon: number]
 

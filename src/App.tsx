@@ -1,9 +1,14 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Footer from './components/Footer'
+import Header from './components/Header'
+import { AboutProject, AboutSword } from './components/Sections'
 import TestimonialCard from './components/TestimonialCard'
 import { testimonials } from './data/testimonials'
 import { GlobeController } from './globe/GlobeController'
 import GlobeControls from './globe/GlobeControls'
 import Markers from './globe/Markers'
+import { usePage } from './usePage'
+import './styles/page.css'
 
 const GlobeScene = lazy(() => import('./globe/GlobeScene'))
 
@@ -73,69 +78,121 @@ export default function App() {
     }
   }, [])
 
+  usePage()
+
+  // Stop rendering, and close the card, once the hero has scrolled away.
+  const stage = useRef<HTMLElement>(null)
+  const [heroVisible, setHeroVisible] = useState(true)
+  useEffect(() => {
+    if (!stage.current) return
+    const io = new IntersectionObserver(
+      ([e]) => {
+        setHeroVisible(e.isIntersecting)
+        if (e.intersectionRatio < 0.35) close()
+      },
+      { threshold: [0, 0.35] },
+    )
+    io.observe(stage.current)
+    return () => io.disconnect()
+  }, [close])
+
   const current = active !== null ? testimonials[active] : null
 
   return (
-    <main>
-      <section className="globe-stage" aria-label="Member stories on an interactive globe" data-card={cardOpen}>
-        {webgl ? (
-          <>
-            <div className="globe-stage__view">
-              <div className="globe-stage__canvas" data-ready={ready}>
-                <Suspense fallback={null}>
-                  <GlobeScene controller={controller} onReady={onReady} markers={testimonials} markerEls={markerEls} />
-                </Suspense>
+    <>
+      <Header />
+      <main id="top">
+        <section
+          className="globe-stage"
+          ref={stage}
+          aria-label="Member stories on an interactive globe"
+          data-card={cardOpen}
+        >
+          {webgl ? (
+            <>
+              <div className="globe-stage__view">
+                <div className="globe-stage__canvas" data-ready={ready}>
+                  <Suspense fallback={null}>
+                    <GlobeScene
+                      controller={controller}
+                      onReady={onReady}
+                      markers={testimonials}
+                      markerEls={markerEls}
+                      active={heroVisible}
+                    />
+                  </Suspense>
+                </div>
+                <Markers
+                  testimonials={testimonials}
+                  activeId={current?.id ?? null}
+                  controller={controller}
+                  els={markerEls}
+                  onSelect={select}
+                  ready={ready}
+                />
               </div>
-              <Markers
-                testimonials={testimonials}
-                activeId={current?.id ?? null}
-                controller={controller}
-                els={markerEls}
-                onSelect={select}
-                ready={ready}
-              />
-            </div>
-            <div className="globe-loading label" data-ready={ready} aria-hidden={ready}>
-              <span role="status">
-                Loading globe
-                <span className="globe-loading__bar" />
+              <div className="globe-loading label" data-ready={ready} aria-hidden={ready}>
+                <span role="status">
+                  Loading globe
+                  <span className="globe-loading__bar" />
+                </span>
+              </div>
+              <p className="globe-hint label" data-visible={hint} aria-hidden="true">
+                Hold {isMac ? '⌘' : 'Ctrl'} and scroll to zoom
+              </p>
+              <GlobeControls controller={controller} />
+              <span className="scroll-cue label" aria-hidden="true">
+                Scroll
               </span>
+            </>
+          ) : (
+            <div className="story-list" data-keep-card data-lenis-prevent>
+              <p className="story-list__intro">
+                The interactive globe needs WebGL, which is not available in this browser. Every story is listed here
+                instead.
+              </p>
+              <ul>
+                {testimonials.map((t, i) => (
+                  <li key={t.id}>
+                    <button type="button" onClick={() => select(i)}>
+                      <span>{t.city}</span>
+                      <span className="label">{t.country}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <p className="globe-hint label" data-visible={hint} aria-hidden="true">
-              Hold {isMac ? '⌘' : 'Ctrl'} and scroll to zoom
-            </p>
-            <GlobeControls controller={controller} />
-          </>
-        ) : (
-          <div className="story-list" data-keep-card>
-            <p className="story-list__intro">
-              The interactive globe needs WebGL, which is not available in this browser. Every story is listed here
-              instead.
-            </p>
-            <ul>
-              {testimonials.map((t, i) => (
-                <li key={t.id}>
-                  <button type="button" onClick={() => select(i)}>
-                    <span>{t.city}</span>
-                    <span className="label">{t.country}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </section>
+          )}
+          {webgl && (
+            <div className="hero-copy">
+              <span className="label" data-reveal>
+                Member stories
+              </span>
+              <h1 data-reveal style={{ '--d': '120ms' } as React.CSSProperties}>
+                Stories of people <em>moving again</em>, from all over the world.
+              </h1>
+              <p data-reveal style={{ '--d': '260ms' } as React.CSSProperties}>
+                Spin the globe and select a city to hear from a Sword member.
+              </p>
+            </div>
+          )}
+        </section>
 
-      {cardOpen && current && active !== null && (
-        <TestimonialCard
-          testimonial={current}
-          index={active}
-          total={testimonials.length}
-          onClose={close}
-          onPrev={prev}
-          onNext={next}
-        />
-      )}
-    </main>
+        <AboutProject />
+        <AboutSword />
+
+        {cardOpen && current && active !== null && (
+          <TestimonialCard
+            testimonial={current}
+            index={active}
+            total={testimonials.length}
+            onClose={close}
+            onPrev={prev}
+            onNext={next}
+          />
+        )}
+      </main>
+      <Footer />
+    </>
   )
 }

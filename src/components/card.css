@@ -188,12 +188,8 @@
   margin: 0;
   appearance: none;
   -webkit-appearance: none;
-  background: linear-gradient(
-      to right,
-      var(--color-accent) var(--pct, 0%),
-      var(--color-line) var(--pct, 0%)
-    )
-    center / 100% 1px no-repeat;
+  background: linear-gradient(to right, var(--color-accent) var(--pct, 0%), var(--color-line) var(--pct, 0%)) center /
+    100% 1px no-repeat;
   cursor: pointer;
 }
 

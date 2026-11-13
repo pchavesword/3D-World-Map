@@ -157,12 +157,15 @@ type Props = {
   onReady: () => void
   markers: MarkerPoint[]
   markerEls: MarkerElements
+  /** False while the hero is off screen, which stops the render loop. */
+  active: boolean
 }
 
-export default function GlobeScene({ controller, onReady, markers, markerEls }: Props) {
+export default function GlobeScene({ controller, onReady, markers, markerEls, active }: Props) {
   return (
     <Canvas
       flat
+      frameloop={active ? 'always' : 'never'}
       dpr={[1, 1.75]}
       camera={{ fov: FOV, near: 0.05, far: 50, position: [0, 0, 5] }}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}

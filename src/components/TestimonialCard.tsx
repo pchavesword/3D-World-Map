@@ -90,8 +90,14 @@ export default function TestimonialCard({ testimonial: t, index, total, onClose,
       </header>
 
       {/* Keyed so content fades and the audio element resets between stories. */}
-      <div className="card__body" key={t.id}>
-        <img className="card__photo" src={t.photo} alt={t.placeholder ? '' : `Portrait of ${t.name}`} width={800} height={1000} />
+      <div className="card__body" key={t.id} data-lenis-prevent>
+        <img
+          className="card__photo"
+          src={t.photo}
+          alt={t.placeholder ? '' : `Portrait of ${t.name}`}
+          width={800}
+          height={1000}
+        />
         <div className="card__text">
           <h2 className="card__name" id="card-name">
             {t.name}
