@@ -9,7 +9,7 @@ export const US_VIEW: GlobeView = { lon: -97, lat: 38.5, zoom: 2.1 }
 export const ZOOM_MIN = 0.8
 export const ZOOM_MAX = 2.8
 const LAT_LIMIT = 70
-const AUTO_SPEED = 2.2 // degrees of longitude per second
+const AUTO_SPEED = 3.5 // degrees of longitude per second
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 
