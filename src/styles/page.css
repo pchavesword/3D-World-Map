@@ -364,9 +364,13 @@ em {
 }
 
 @media (max-width: 640px) {
+  /* Globe on top, copy underneath, controls at the very bottom. */
+  .globe-stage__view {
+    transform: translateY(-13svh);
+  }
+
   .hero-copy {
-    top: 76px;
-    bottom: auto;
+    bottom: calc(var(--gutter) + 60px);
     width: auto;
     right: var(--gutter);
   }
