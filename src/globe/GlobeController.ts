@@ -1,5 +1,5 @@
 import gsap from 'gsap'
-import { shortestLonDelta } from './geo'
+import { shortestLonDelta } from './angles'
 
 export type GlobeView = { lon: number; lat: number; zoom: number }
 

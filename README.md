@@ -15,3 +15,15 @@ npm run dev
 - Natural Earth 1:10m land polygons (via the `world-atlas` package)
 
 The script writes height, normal and albedo maps at 4K (desktop) and 2K (mobile).
+
+## Content
+
+All member stories live in `src/data/testimonials.ts`. Every entry is invented
+placeholder content flagged `placeholder: true`; replace each with a real,
+consented story (plus photo and audio) and set the flag to `false` before launch.
+Statements about Sword Health in `src/components/Sections.tsx` are marked
+`VERIFY` and need checking against approved messaging.
+
+## Deploy
+
+Vercel detects the Vite project; `vercel.json` only adds cache headers.

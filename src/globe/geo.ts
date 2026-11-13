@@ -12,8 +12,3 @@ export function latLonToVector3(lat: number, lon: number, radius = 1, target = n
     radius * Math.sin(phi) * Math.sin(theta),
   )
 }
-
-/** Wraps a longitude difference to [-180, 180] so tweens take the short way round. */
-export function shortestLonDelta(from: number, to: number) {
-  return ((((to - from) % 360) + 540) % 360) - 180
-}
