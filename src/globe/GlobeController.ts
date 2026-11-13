@@ -10,7 +10,6 @@ export const ZOOM_MIN = 0.8
 export const ZOOM_MAX = 2.8
 const LAT_LIMIT = 70
 const AUTO_SPEED = 2.2 // degrees of longitude per second
-const IDLE_MS = 3000
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 
@@ -30,22 +29,14 @@ export class GlobeController {
   velLon = 0
   velLat = 0
   dragging = false
-  /** Reasons to hold auto-rotation (marker hover, open card…). */
+  /** Reasons to hold auto-rotation (open card, keyboard focus on a marker). */
   private holds = new Set<string>()
-  private lastInteraction = -Infinity
   private autoBlend = 0
   private tween: gsap.core.Tween | null = null
 
-  touch() {
-    this.lastInteraction = performance.now()
-  }
-
   hold(reason: string, on: boolean) {
     if (on) this.holds.add(reason)
-    else {
-      this.holds.delete(reason)
-      this.touch()
-    }
+    else this.holds.delete(reason)
   }
 
   private killTween() {
@@ -58,7 +49,6 @@ export class GlobeController {
     this.dragging = true
     this.velLon = 0
     this.velLat = 0
-    this.touch()
   }
 
   dragBy(dLon: number, dLat: number, dt: number) {
@@ -70,7 +60,6 @@ export class GlobeController {
       this.velLon += (dLon / dt - this.velLon) * k
       this.velLat += (dLat / dt - this.velLat) * k
     }
-    this.touch()
   }
 
   endDrag(msSinceLastMove: number) {
@@ -79,13 +68,11 @@ export class GlobeController {
       this.velLon = 0
       this.velLat = 0
     }
-    this.touch()
   }
 
   zoomBy(factor: number) {
     this.killTween()
     this.zoomTarget = clamp(this.zoomTarget * factor, ZOOM_MIN, ZOOM_MAX)
-    this.touch()
   }
 
   flyTo(target: Partial<GlobeView>, duration = 1.8, onArrive?: () => void) {
@@ -98,7 +85,6 @@ export class GlobeController {
       zoom: clamp(target.zoom ?? this.zoomTarget, ZOOM_MIN, ZOOM_MAX),
     }
     this.zoomTarget = to.zoom
-    this.touch()
     if (prefersReducedMotion()) {
       Object.assign(this.view, to)
       onArrive?.()
@@ -108,7 +94,6 @@ export class GlobeController {
       ...to,
       duration,
       ease: 'power3.inOut',
-      onUpdate: () => this.touch(),
       onComplete: () => {
         this.tween = null
         onArrive?.()
@@ -126,7 +111,6 @@ export class GlobeController {
         const decay = Math.exp(-dt * 2.6)
         this.velLon *= decay
         this.velLat *= decay
-        this.touch()
       }
       v.zoom += (this.zoomTarget - v.zoom) * (1 - Math.exp(-dt * 7))
     }
@@ -135,7 +119,7 @@ export class GlobeController {
       !this.dragging &&
       !this.tween &&
       this.holds.size === 0 &&
-      performance.now() - this.lastInteraction > IDLE_MS &&
+      Math.abs(this.velLon) + Math.abs(this.velLat) <= 0.05 &&
       !prefersReducedMotion()
     // Ease auto-rotation in and out rather than snapping.
     this.autoBlend += ((idle ? 1 : 0) - this.autoBlend) * (1 - Math.exp(-dt * (idle ? 1.2 : 8)))

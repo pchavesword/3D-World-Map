@@ -32,8 +32,6 @@ export default function Markers({ testimonials, activeId, controller, els, onSel
             else els.current.delete(t.id)
           }}
           onClick={() => onSelect(i)}
-          onPointerEnter={() => controller.hold('hover', true)}
-          onPointerLeave={() => controller.hold('hover', false)}
           onFocus={(e) => {
             // Keyboard users may tab to a city on the far side: bring it round.
             if (e.currentTarget.matches(':focus-visible')) {
