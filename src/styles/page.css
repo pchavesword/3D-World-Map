@@ -34,8 +34,42 @@ em {
   pointer-events: none;
 }
 
-.site-header a {
+.site-header a,
+.site-header button {
   pointer-events: auto;
+}
+
+.site-header__nav {
+  align-items: center;
+}
+
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-right: -10px;
+  transition: color var(--dur-med) ease;
+}
+
+.theme-toggle:hover {
+  color: var(--color-accent);
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The wordmark is a dark-ink SVG; flip it to light ink on the dark theme. */
+:root[data-theme='dark'] .site-header__logo img,
+:root[data-theme='dark'] .site-footer__mark {
+  filter: invert(1) brightness(1.15);
 }
 
 .site-header__logo img {

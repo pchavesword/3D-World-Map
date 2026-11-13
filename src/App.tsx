@@ -8,6 +8,7 @@ import { GlobeController } from './globe/GlobeController'
 import GlobeControls from './globe/GlobeControls'
 import Markers from './globe/Markers'
 import { usePage } from './usePage'
+import { useTheme } from './useTheme'
 import './styles/page.css'
 
 const GlobeScene = lazy(() => import('./globe/GlobeScene'))
@@ -79,6 +80,7 @@ export default function App() {
   }, [])
 
   usePage()
+  const { theme, toggle: toggleTheme } = useTheme()
 
   // Stop rendering, and close the card, once the hero has scrolled away.
   const stage = useRef<HTMLElement>(null)
@@ -100,7 +102,7 @@ export default function App() {
 
   return (
     <>
-      <Header />
+      <Header theme={theme} onToggleTheme={toggleTheme} />
       <main id="top">
         <section
           className="globe-stage"
@@ -119,6 +121,7 @@ export default function App() {
                       markers={testimonials}
                       markerEls={markerEls}
                       active={heroVisible}
+                      theme={theme}
                     />
                   </Suspense>
                 </div>

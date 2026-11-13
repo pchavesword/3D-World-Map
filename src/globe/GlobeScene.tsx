@@ -4,11 +4,35 @@ import * as THREE from 'three'
 import { DEG, latLonToVector3 } from './geo'
 import type { GlobeController } from './GlobeController'
 import { useGlobePointer } from './useGlobePointer'
+import type { Theme } from '../useTheme'
 
 const FOV = 32
 /** Fraction of the smaller viewport half-angle the globe fills at zoom 1. */
 const FILL = 0.74
-const ACCENT = '#2b5bff'
+
+/** Per-theme look: clay white in light, graphite in dark. */
+const LOOK = {
+  light: {
+    clay: '#ffffff',
+    sky: '#ffffff',
+    ground: '#c6cae0',
+    hemi: 1.3,
+    key: 1.85,
+    fill: 0.25,
+    glow: '#2b5bff',
+    glowAlpha: 0.27,
+  },
+  dark: {
+    clay: '#5d6173',
+    sky: '#dfe4ff',
+    ground: '#3b4368',
+    hemi: 1.2,
+    key: 2.1,
+    fill: 0.5,
+    glow: '#5f84ff',
+    glowAlpha: 0.5,
+  },
+}
 
 /** Camera distance that frames the unit globe for the current aspect ratio. */
 function fitDistance(aspect: number) {
@@ -21,7 +45,7 @@ function useLowPower() {
   return useMemo(() => window.matchMedia('(max-width: 800px), (pointer: coarse)').matches, [])
 }
 
-function Earth({ onReady }: { onReady: () => void }) {
+function Earth({ onReady, color }: { onReady: () => void; color: string }) {
   const low = useLowPower()
   const gl = useThree((s) => s.gl)
   const res = low || gl.capabilities.maxTextureSize < 4096 ? '2k' : '4k'
@@ -46,6 +70,7 @@ function Earth({ onReady }: { onReady: () => void }) {
     <mesh>
       <sphereGeometry args={low ? [1, 384, 192] : [1, 768, 384]} />
       <meshStandardMaterial
+        color={color}
         map={albedo}
         normalMap={normal}
         normalScale={new THREE.Vector2(1, 1)}
@@ -62,7 +87,7 @@ const atmosphereMaterial = new THREE.ShaderMaterial({
   side: THREE.BackSide,
   transparent: true,
   depthWrite: false,
-  uniforms: { uColor: { value: new THREE.Color(ACCENT) } },
+  uniforms: { uColor: { value: new THREE.Color(LOOK.light.glow) }, uAlpha: { value: LOOK.light.glowAlpha } },
   vertexShader: /* glsl */ `
     varying vec3 vNormal;
     void main() {
@@ -72,17 +97,22 @@ const atmosphereMaterial = new THREE.ShaderMaterial({
   `,
   fragmentShader: /* glsl */ `
     uniform vec3 uColor;
+    uniform float uAlpha;
     varying vec3 vNormal;
     void main() {
       // 0 at the outer edge of the shell, rising toward the globe's limb.
       float f = clamp(-normalize(vNormal).z, 0.0, 1.0);
-      float a = pow(smoothstep(0.0, 0.62, f), 2.2) * 0.27;
+      float a = pow(smoothstep(0.0, 0.62, f), 2.2) * uAlpha;
       gl_FragColor = vec4(uColor, a);
     }
   `,
 })
 
-function Atmosphere() {
+function Atmosphere({ color, alpha }: { color: string; alpha: number }) {
+  useEffect(() => {
+    atmosphereMaterial.uniforms.uColor.value.set(color)
+    atmosphereMaterial.uniforms.uAlpha.value = alpha
+  }, [color, alpha])
   return (
     <mesh material={atmosphereMaterial}>
       <sphereGeometry args={[1.2, 64, 48]} />
@@ -159,9 +189,11 @@ type Props = {
   markerEls: MarkerElements
   /** False while the hero is off screen, which stops the render loop. */
   active: boolean
+  theme: Theme
 }
 
-export default function GlobeScene({ controller, onReady, markers, markerEls, active }: Props) {
+export default function GlobeScene({ controller, onReady, markers, markerEls, active, theme }: Props) {
+  const look = LOOK[theme]
   return (
     <Canvas
       flat
@@ -173,13 +205,13 @@ export default function GlobeScene({ controller, onReady, markers, markerEls, ac
       style={{ touchAction: 'auto' }}
     >
       {/* Soft studio setup: broad key from upper left, cool fill from below. */}
-      <hemisphereLight args={['#ffffff', '#c6cae0', 1.3]} />
-      <directionalLight position={[-3.2, 3.4, 4.2]} intensity={1.85} />
-      <directionalLight position={[4, -1.5, 2]} intensity={0.25} color="#dde5ff" />
-      <Atmosphere />
+      <hemisphereLight args={[look.sky, look.ground, look.hemi]} />
+      <directionalLight position={[-3.2, 3.4, 4.2]} intensity={look.key} />
+      <directionalLight position={[4, -1.5, 2]} intensity={look.fill} color="#dde5ff" />
+      <Atmosphere color={look.glow} alpha={look.glowAlpha} />
       <Rig controller={controller} markers={markers} markerEls={markerEls}>
         <Suspense fallback={null}>
-          <Earth onReady={onReady} />
+          <Earth onReady={onReady} color={look.clay} />
         </Suspense>
       </Rig>
     </Canvas>

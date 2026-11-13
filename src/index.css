@@ -27,6 +27,19 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-slow: 900ms;
   --dur-med: 450ms;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #0d0e11;
+  --color-surface: #15171b;
+  --color-line: #2a2c32;
+  --color-text-muted: #7d7f87;
+  --color-text: #a9abb2;
+  --color-heading: #f1f1ee;
+  --color-accent: var(--blue-300);
+  --color-accent-strong: var(--blue-100);
 }
 
 *,
@@ -47,6 +60,9 @@ body {
   font-size: 1rem;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition:
+    background-color var(--dur-med) ease,
+    color var(--dur-med) ease;
 }
 
 button {

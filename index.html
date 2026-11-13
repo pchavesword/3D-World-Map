@@ -12,6 +12,14 @@
       href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Apply the saved or system theme before first paint.
+      try {
+        var t = localStorage.getItem('theme')
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.dataset.theme = t
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
